@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保险需求计算器 - Invar<Calc Pro</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .app-header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            font-weight: 300;
+        }
+
+        .app-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 2rem;
+        }
+
+        /* 表单样式 */
+        .client-form {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+            border-left: 5px solid #667eea;
+        }
+
+        .form-section h2 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            padding: 1rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .total-display {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            border: 2px solid #e1e8ed;
+            margin-top: 1rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: #2c3e50;
+            padding: 0.5rem 1rem;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+        }
+
+        .form-actions {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .calculate-btn {
+            padding: 1.2rem 3rem;
+            font-size: 1.3rem;
+            min-width: 320px;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .calculate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 160px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+
+        /* 结果展示样式 */
+        .results-display {
+            padding: 0;
+        }
+
+        .results-header {
+            padding: 2rem 2rem 1rem;
+            text-align: center;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+
+        .results-header h2 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+
+        .client-name {
+            color: #6c757d;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .total-amount {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4rem 2rem;
+            margin: 0;
+        }
+
+        .amount-figure {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .amount-label {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .breakdown-section {
+            padding: 3rem 2rem;
+        }
+
+        .breakdown-section h3 {
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        .breakdown-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .breakdown-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 2rem;
+            align-items: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e1e8ed;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .breakdown-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .breakdown-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .breakdown-amount {
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: right;
+            font-size: 1.2rem;
+        }
+
+        .breakdown-percentage {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .assumptions-section {
+            background: #f8f9fa;
+            padding: 2rem;
+            margin: 2rem;
+            border-radius: 12px;
+        }
+
+        .assumptions-section h3 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .assumptions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .assumption-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .assumption-item span {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .assumption-item strong {
+            color: #2c3e50;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin: 3rem 2rem 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e1e8ed;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .app-header h1 {
+                font-size: 2.2rem;
+            }
+
+            .app-header {
+                padding: 2rem 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .checkbox-group {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                margin: 2rem 1rem 1rem;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .breakdown-item {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                text-align: center;
+                padding: 1.5rem;
+            }
+
+            .amount-figure {
+                font-size: 2.8rem;
+            }
+
+            .assumptions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .calculate-btn {
+                min-width: auto;
+                width: 100%;
+                padding: 1.2rem 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .app-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .amount-figure {
+                font-size: 2.2rem;
+            }
+
+            .form-section {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="root"></div>
+    </div>
+
+    <script type="text/babel">
+        // 完整的React组件代码
+        const { useState } = React;
+
+        const formatCurrency = (value) => {
+            return new Intl.NumberFormat('en-CA', {
+                style: 'currency',
+                currency: 'CAD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        };
+
+        const calculateInsuranceNeed = (clientData) => {
+            const totalIncome = clientData.income.employment + clientData.income.rental +
+                               clientData.income.investment + clientData.income.other;
+
+            const totalLiabilities = clientData.liabilities.mortgage1 +
+                                   clientData.liabilities.mortgage2 +
+                                   clientData.liabilities.otherLoans;
+
+            const totalAssets = clientData.assets.cash + clientData.assets.canadianInvestments +
+                              clientData.assets.canadianProperties + clientData.assets.overseasFinancial +
+                              clientData.assets.overseasProperties + clientData.assets.otherAssets;
+
+            const futureValue = totalAssets * Math.pow(1 + clientData.taxInfo.growthRate, clientData.taxInfo.calculationYears);
+            const capitalGain = futureValue - clientData.taxInfo.assetsACB;
+            const taxableGain = capitalGain * clientData.taxInfo.inclusionRate;
+            const futureTax = taxableGain * clientData.taxInfo.marginalTaxRate;
+
+            const incomeReplacement = totalIncome * 20;
+            const debtCoverage = totalLiabilities;
+
+            let overseasContribution = 0;
+            if (clientData.settings.includeOverseasAssets) {
+                const overseasTotal = clientData.assets.overseasFinancial + clientData.assets.overseasProperties;
+                if (clientData.settings.overseasVerifiable) {
+                    overseasContribution = overseasTotal * 0.5;
+                } else {
+                    overseasContribution = overseasTotal * 0.25;
+                }
+                overseasContribution = Math.min(overseasContribution, 10000000);
+            }
+
+            const totalInsuranceNeed = incomeReplacement + debtCoverage + futureTax + overseasContribution;
+
+            return {
+                totalInsuranceNeed,
+                breakdown: {
+                    incomeReplacement,
+                    debtCoverage,
+                    futureTax,
+                    overseasContribution
+                },
+                assumptions: {
+                    totalIncome,
+                    totalAssets,
+                    totalLiabilities,
+                    futureValue,
+                    capitalGain,
+                    taxableGain
+                }
+            };
+        };
+
+        const InsuranceCalculator = () => {
+            const [clientData, setClientData] = useState({
+                personalInfo: {
+                    name: '',
+                    age: 52,
+                    occupation: '房地产',
+                    lifeExpectancy: 90
+                },
+                income: {
+                    employment: 0,
+                    rental: 50000,
+                    investment: 1200000,
+                    other: 0
+                },
+                assets: {
+                    cash: 0,
+                    canadianInvestments: 20000000,
+                    canadianProperties: 5500000,
+                    overseasFinancial: 2000000,
+                    overseasProperties: 5000000,
+                    otherAssets: 0
+                },
+                liabilities: {
+                    mortgage1: 300000,
+                    mortgage2: 600000,
+                    otherLoans: 0
+                },
+                taxInfo: {
+                    assetsACB: 22000000,
+                    inclusionRate: 0.5,
+                    marginalTaxRate: 0.535,
+                    growthRate: 0.06,
+                    calculationYears: 20
+                },
+                settings: {
+                    includeOverseasAssets: true,
+                    overseasVerifiable: false
+                }
+            });
+
+            const [calculationResult, setCalculationResult] = useState(null);
+            const [isCalculating, setIsCalculating] = useState(false);
+
+            const handleInputChange = (section, field, value) => {
+                setClientData(prev => ({
+                    ...prev,
+                    [section]: {
+                        ...prev[section],
+                        [field]: value
+                    }
+                }));
+            };
+
+            const handleCalculate = (e) => {
+                e.preventDefault();
+                setIsCalculating(true);
+
+                setTimeout(() => {
+                    const result = calculateInsuranceNeed(clientData);
+                    setCalculationResult(result);
+                    setIsCalculating(false);
+                }, 800);
+            };
+
+            const handleReset = () => {
+                setCalculationResult(null);
+            };
+
+            const generatePDF = () => {
+                const printContent = `
+                    <div style="padding: 30px; font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+                        <h1 style="color: #667eea; text-align: center; margin-bottom: 20px; font-size: 2.5rem;">保险需求分析报告</h1>
+                        <div style="border-bottom: 3px solid #667eea; margin: 30px 0;"></div>
+
+                        <h2 style="color: #2c3e50; margin-bottom: 20px;">客户信息</h2>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                            <p style="margin: 10px 0;"><strong>姓名：</strong>${clientData.personalInfo.name || '未命名客户'}</p>
+                            <p style="margin: 10px 0;"><strong>年龄：</strong>${clientData.personalInfo.age} 岁</p>
+                            <p style="margin: 10px 0;"><strong>职业：</strong>${clientData.personalInfo.occupation}</p>
+                        </div>
+
+                        <h2 style="color: #2c3e50; margin-bottom: 20px;">推荐保险保额</h2>
+                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 40px; text-align: center; border-radius: 15px; margin: 30px 0;">
+                            <div style="font-size: 3rem; font-weight: bold; margin-bottom: 10px;">${formatCurrency(calculationResult.totalInsuranceNeed)}</div>
+                            <div style="font-size: 1.5rem;">推荐总保额</div>
+                        </div>
+
+                        <h2 style="color: #2c3e50; margin-bottom: 20px;">详细组成分析</h2>
+                        <table style="width: 100%; border-collapse: collapse; margin: 30px 0; font-size: 1.1rem;">
+                            <tr style="background: #667eea; color: white;">
+                                <th style="padding: 15px; text-align: left; border: 1px solid #ddd;">项目</th>
+                                <th style="padding: 15px; text-align: right; border: 1px solid #ddd;">金额</th>
+                                <th style="padding: 15px; text-align: center; border: 1px solid #ddd;">占比</th>
+                            </tr>
+                            <tr>
+                                <td style="padding: 15px; border: 1px solid #ddd; background: #f8f9fa;">收入替代需求</td>
+                                <td style="padding: 15px; text-align: right; border: 1px solid #ddd; background: #f8f9fa;">${formatCurrency(calculationResult.breakdown.incomeReplacement)}</td>
+                                <td style="padding: 15px; text-align: center; border: 1px solid #ddd; background: #f8f9fa;">${((calculationResult.breakdown.incomeReplacement / calculationResult.totalInsuranceNeed) * 100).toFixed(1)}%</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 15px; border: 1px solid #ddd;">未来税务负担</td>
+                                <td style="padding: 15px; text-align: right; border: 1px solid #ddd;">${formatCurrency(calculationResult.breakdown.futureTax)}</td>
+                                <td style="padding: 15px; text-align: center; border: 1px solid #ddd;">${((calculationResult.breakdown.futureTax / calculationResult.totalInsuranceNeed) * 100).toFixed(1)}%</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 15px; border: 1px solid #ddd; background: #f8f9fa;">债务覆盖</td>
+                                <td style="padding: 15px; text-align: right; border: 1px solid #ddd; background: #f8f9fa;">${formatCurrency(calculationResult.breakdown.debtCoverage)}</td>
+                                <td style="padding: 15px; text-align: center; border: 1px solid #ddd; background: #f8f9fa;">${((calculationResult.breakdown.debtCoverage / calculationResult.totalInsuranceNeed) * 100).toFixed(1)}%</td>
+                            </tr>
+                            ${calculationResult.breakdown.overseasContribution > 0 ? `
+                            <tr>
+                                <td style="padding: 15px; border: 1px solid #ddd;">海外资产贡献</td>
+                                <td style="padding: 15px; text-align: right; border: 1px solid #ddd;">${formatCurrency(calculationResult.breakdown.overseasContribution)}</td>
+                                <td style="padding: 15px; text-align: center; border: 1px solid #ddd;">${((calculationResult.breakdown.overseasContribution / calculationResult.totalInsuranceNeed) * 100).toFixed(1)}%</td>
+                            </tr>
+                            ` : ''}
+                        </table>
+
+                        <h2 style="color: #2c3e50; margin-bottom: 20px;">计算假设</h2>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                            <p style="margin: 8px 0;">• 收入替代倍数: 20倍</p>
+                            <p style="margin: 8px 0;">• 资本利得计入率: 50%</p>
+                            <p style="margin: 8px 0;">• 边际税率: ${(clientData.taxInfo.marginalTaxRate * 100).toFixed(1)}%</p>
+                            <p style="margin: 8px 0;">• 资产年增长率: ${(clientData.taxInfo.growthRate * 100).toFixed(1)}%</p>
+                            <p style="margin: 8px 0;">• 计算年限: ${clientData.taxInfo.calculationYears} 年</p>
+                        </div>
+
+                        <div style="margin-top: 50px; padding-top: 30px; border-top: 3px solid #667eea; text-align: center; color: #666;">
+                            <p style="margin: 10px 0; font-size: 1.1rem;">报告生成时间: ${new Date().toLocaleString('zh-CN')}</p>
+                            <p style="margin: 10px 0; font-size: 1.1rem; font-weight: bold;">InsureCalc Pro - 专业保险需求分析工具</p>
+                        </div>
+                    </div>
+                `;
+
+                const printWindow = window.open('', '_blank', 'width=1000,height=800');
+                printWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>保险需求分析报告 - ${clientData.personalInfo.name || '客户'}</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: white; }
+                                @media print {
+                                    body { margin: 0; padding: 0; }
+                                    .no-print { display: none; }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            ${printContent}
+                            <div class="no-print" style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #ddd;">
+                                <button onclick="window.print()" style="padding: 12px 30px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; margin: 0 10px;">🖨️ 打印/保存为PDF</button>
+                                <button onclick="window.close()" style="padding: 12px 30px; background: #6c757d; color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; margin: 0 10px;">关闭窗口</button>
+                            </div>
+                        </body>
+                    </html>
+                `);
+                printWindow.document.close();
+            };
+
+            const totalIncome = Object.values(clientData.income).reduce((sum, val) => sum + (Number(val) || 0), 0);
+            const totalAssets = Object.values(clientData.assets).reduce((sum, val) => sum + (Number(val) || 0), 0);
+            const totalLiabilities = Object.values(clientData.liabilities).reduce((sum, val) => sum + (Number(val) || 0), 0);
+
+            if (calculationResult) {
+                return React.createElement('div', null,
+                    React.createElement('header', {className: 'app-header'},
+                        React.createElement('h1', null, 'InsureCalc Pro'),
+                        React.createElement('p', null, '专业保险需求分析工具')
+                    ),
+                    React.createElement('main', {className: 'main-content'},
+                        React.createElement('div', {className: 'results-display'},
+                            React.createElement('div', {className: 'results-header'},
+                                React.createElement('h2', null, '🎯 保险需求分析结果'),
+                                React.createElement('p', {className: 'client-name'}, '客户: ', clientData.personalInfo.name || '未命名客户')
+                            ),
+                            React.createElement('div', {className: 'total-amount'},
+                                React.createElement('div', {className: 'amount-figure'}, formatCurrency(calculationResult.totalInsuranceNeed)),
+                                React.createElement('div', {className: 'amount-label'}, '推荐总保额')
+                            ),
+                            React.createElement('div', {className: 'breakdown-section'},
+                                React.createElement('h3', null, '详细组成分析'),
+                                React.createElement('div', {className: 'breakdown-grid'},
+                                    React.createElement('div', {className: 'breakdown-item'},
+                                        React.createElement('div', {className: 'breakdown-label'}, '收入替代需求'),
+                                        React.createElement('div', {className: 'breakdown-amount'}, formatCurrency(calculationResult.breakdown.incomeReplacement)),
+                                        React.createElement('div', {className: 'breakdown-percentage'}, `${((calculationResult.breakdown.incomeReplacement / calculationResult.totalInsuranceNeed) * 100).toFixed(1)}%`)
+                                    ),
+                                    React.createElement('div', {className: 'breakdown-item'},
+                                        React.createElement('div', {className: 'breakdown-label'}, '未来税务负担'),
+                                        React.createElement('div', {className: 'breakdown-amount'}, formatCurrency(calculationResult.breakdown.futureTax)),
+                                        React.createElement('div', {className: 'breakdown-percentage'}, `${((calculationResult.breakdown.futureTax / calculationResult.totalInsuranceNeed) * 100).toFixed(1)}%`)
+                                    ),
+                                    React.createElement('div', {className: 'breakdown-item'},
+                                        React.createElement('div', {className: 'breakdown-label'}, '债务覆盖'),
+                                        React.createElement('div', {className: 'breakdown-amount'}, formatCurrency(calculationResult.breakdown.debtCoverage)),
+                                        React.createElement('div', {className: 'breakdown-percentage'}, `${((calculationResult.breakdown.debtCoverage / calculationResult.totalInsuranceNeed) * 100).toFixed(1)}%`)
+                                    ),
+                                    calculationResult.breakdown.overseasContribution > 0 &&
+                                    React.createElement('div', {className: 'breakdown-item'},
+                                        React.createElement('div', {className: 'breakdown-label'}, '海外资产贡献'),
+                                        React.createElement('div', {className: 'breakdown-amount'}, formatCurrency(calculationResult.breakdown.overseasContribution)),
+                                        React.createElement('div', {className: 'breakdown-percentage'}, `${((calculationResult.breakdown.overseasContribution / calculationResult.totalInsuranceNeed) * 100).toFixed(1)}%`)
+                                    )
+                                )
+                            ),
+                            React.createElement('div', {className: 'assumptions-section'},
+                                React.createElement('h3', null, '计算假设'),
+                                React.createElement('div', {className: 'assumptions-grid'},
+                                    React.createElement('div', {className: 'assumption-item'},
+                                        React.createElement('span', null, '收入替代倍数:'),
+                                        React.createElement('strong', null, '20倍')
+                                    ),
+                                    React.createElement('div', {className: 'assumption-item'},
+                                        React.createElement('span', null, '资本利得计入率:'),
+                                        React.createElement('strong', null, '50%')
+                                    ),
+                                    React.createElement('div', {className: 'assumption-item'},
+                                        React.createElement('span', null, '边际税率:'),
+                                        React.createElement('strong', null, `${(clientData.taxInfo.marginalTaxRate * 100).toFixed(1)}%`)
+                                    ),
+                                    React.createElement('div', {className: 'assumption-item'},
+                                        React.createElement('span', null, '资产年增长率:'),
+                                        React.createElement('strong', null, `${(clientData.taxInfo.growthRate * 100).toFixed(1)}%`)
+                                    ),
+                                    React.createElement('div', {className: 'assumption-item'},
+                                        React.createElement('span', null, '计算年限:'),
+                                        React.createElement('strong', null, `${clientData.taxInfo.calculationYears} 年`)
+                                    )
+                                )
+                            ),
+                            React.createElement('div', {className: 'action-buttons'},
+                                React.createElement('button', {onClick: handleReset, className: 'btn btn-secondary'}, '← 重新计算'),
+                                React.createElement('button', {onClick: generatePDF, className: 'btn btn-primary'}, '📄 生成PDF报告')
+                            )
+                        )
+                    )
+                );
+            }
+
+            return React.createElement('div', null,
+                React.createElement('header', {className: 'app-header'},
+                    React.createElement('h1', null, 'InsureCalc Pro'),
+                    React.createElement('p', null, '专业保险需求分析工具')
+                ),
+                React.createElement('main', {className: 'main-content'},
+                    React.createElement('form', {onSubmit: handleCalculate, className: 'client-form'},
+                        React.createElement('div', {className: 'form-section'},
+                            React.createElement('h2', null, '👤 客户基本信息'),
+                            React.createElement('div', {className: 'form-grid'},
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '姓名'),
+                                    React.createElement('input', {
+                                        type: 'text',
+                                        value: clientData.personalInfo.name,
+                                        onChange: (e) => handleInputChange('personalInfo', 'name', e.target.value),
+                                        placeholder: '请输入客户姓名'
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '年龄'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.personalInfo.age,
+                                        onChange: (e) => handleInputChange('personalInfo', 'age', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '职业'),
+                                    React.createElement('input', {
+                                        type: 'text',
+                                        value: clientData.personalInfo.occupation,
+                                        onChange: (e) => handleInputChange('personalInfo', 'occupation', e.target.value),
+                                        placeholder: '如：房地产'
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '生命预期'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.personalInfo.lifeExpectancy,
+                                        onChange: (e) => handleInputChange('personalInfo', 'lifeExpectancy', parseInt(e.target.value) || 0)
+                                    })
+                                )
+                            )
+                        ),
+                        React.createElement('div', {className: 'form-section'},
+                            React.createElement('h2', null, '💰 收入信息'),
+                            React.createElement('div', {className: 'form-grid'},
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '就业收入'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.income.employment,
+                                        onChange: (e) => handleInputChange('income', 'employment', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '租金收入'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.income.rental,
+                                        onChange: (e) => handleInputChange('income', 'rental', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '投资收入'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.income.investment,
+                                        onChange: (e) => handleInputChange('income', 'investment', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '其他收入'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.income.other,
+                                        onChange: (e) => handleInputChange('income', 'other', parseInt(e.target.value) || 0)
+                                    })
+                                )
+                            ),
+                            React.createElement('div', {className: 'total-display'}, '年收入总计: ', React.createElement('strong', null, formatCurrency(totalIncome)))
+                        ),
+                        React.createElement('div', {className: 'form-section'},
+                            React.createElement('h2', null, '🏠 资产信息'),
+                            React.createElement('div', {className: 'form-grid'},
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '现金与存款'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.assets.cash,
+                                        onChange: (e) => handleInputChange('assets', 'cash', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '加拿大投资'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.assets.canadianInvestments,
+                                        onChange: (e) => handleInputChange('assets', 'canadianInvestments', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '加拿大房地产'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.assets.canadianProperties,
+                                        onChange: (e) => handleInputChange('assets', 'canadianProperties', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '海外金融资产'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.assets.overseasFinancial,
+                                        onChange: (e) => handleInputChange('assets', 'overseasFinancial', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '海外房地产'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.assets.overseasProperties,
+                                        onChange: (e) => handleInputChange('assets', 'overseasProperties', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '其他资产'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.assets.otherAssets,
+                                        onChange: (e) => handleInputChange('assets', 'otherAssets', parseInt(e.target.value) || 0)
+                                    })
+                                )
+                            ),
+                            React.createElement('div', {className: 'total-display'}, '资产总计: ', React.createElement('strong', null, formatCurrency(totalAssets)))
+                        ),
+                        React.createElement('div', {className: 'form-section'},
+                            React.createElement('h2', null, '🏦 负债信息'),
+                            React.createElement('div', {className: 'form-grid'},
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '房贷 1'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.liabilities.mortgage1,
+                                        onChange: (e) => handleInputChange('liabilities', 'mortgage1', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '房贷 2'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.liabilities.mortgage2,
+                                        onChange: (e) => handleInputChange('liabilities', 'mortgage2', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '其他贷款'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.liabilities.otherLoans,
+                                        onChange: (e) => handleInputChange('liabilities', 'otherLoans', parseInt(e.target.value) || 0)
+                                    })
+                                )
+                            ),
+                            React.createElement('div', {className: 'total-display'}, '负债总计: ', React.createElement('strong', null, formatCurrency(totalLiabilities)))
+                        ),
+                        React.createElement('div', {className: 'form-section'},
+                            React.createElement('h2', null, '📊 计算参数'),
+                            React.createElement('div', {className: 'form-grid'},
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '资产成本基础 (ACB)'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.taxInfo.assetsACB,
+                                        onChange: (e) => handleInputChange('taxInfo', 'assetsACB', parseInt(e.target.value) || 0)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '边际税率 (%)'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        step: '0.1',
+                                        value: (clientData.taxInfo.marginalTaxRate * 100).toFixed(1),
+                                        onChange: (e) => handleInputChange('taxInfo', 'marginalTaxRate', (parseFloat(e.target.value) || 0) / 100)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '资产增长率 (%)'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        step: '0.1',
+                                        value: (clientData.taxInfo.growthRate * 100).toFixed(1),
+                                        onChange: (e) => handleInputChange('taxInfo', 'growthRate', (parseFloat(e.target.value) || 0) / 100)
+                                    })
+                                ),
+                                React.createElement('div', {className: 'form-group'},
+                                    React.createElement('label', null, '计算年限'),
+                                    React.createElement('input', {
+                                        type: 'number',
+                                        value: clientData.taxInfo.calculationYears,
+                                        onChange: (e) => handleInputChange('taxInfo', 'calculationYears', parseInt(e.target.value) || 0)
+                                    })
+                                )
+                            ),
+                            React.createElement('div', {className: 'checkbox-group'},
+                                React.createElement('label', null,
+                                    React.createElement('input', {
+                                        type: 'checkbox',
+                                        checked: clientData.settings.includeOverseasAssets,
+                                        onChange: (e) => handleInputChange('settings', 'includeOverseasAssets', e.target.checked)
+                                    }),
+                                    ' 包含海外资产折算'
+                                ),
+                                React.createElement('label', null,
+                                    React.createElement('input', {
+                                        type: 'checkbox',
+                                        checked: clientData.settings.overseasVerifiable,
+                                        onChange: (e) => handleInputChange('settings', 'overseasVerifiable', e.target.checked)
+                                    }),
+                                    ' 海外资产可验证'
+                                )
+                            )
+                        ),
+                        React.createElement('div', {className: 'form-actions'},
+                            React.createElement('button', {type: 'submit', className: 'calculate-btn', disabled: isCalculating},
+                                isCalculating ? '🔄 计算中...' : '🎯 立即计算保险需求'
+                            )
+                        )
+                    )
+                )
+            );
+        };
+
+        ReactDOM.render(React.createElement(InsuranceCalculator), document.getElementById('root'));
+    </script>
+</body>
+</html>
+...
+
+[Message clipped]  View entire message
